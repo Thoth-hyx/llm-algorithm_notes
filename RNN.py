@@ -4,6 +4,7 @@ import torch.nn as nn
 # (B, T, E, H) 分别表示 批次/序列长度/输入维度/隐藏维度
 B,E,H = 1,128,3
 
+# 输入准备，例子：播放周杰伦的《稻香》
 def prepare_inputs():
     np.random.seed(42)                                   # 每个词生成一个随机的词向量
     vocab = {"播放": 0, "周杰伦": 1, "的": 2, "《稻香》": 3}
@@ -52,9 +53,42 @@ def pytorch_rnn_forward(x, U, W):
     y, h_n = rnn(x)          # y:输出序列,h_n:最终的隐藏状态
     return y, h_n.squeeze(0)
 
-# 将NumPy结果转回PyTorch张量
+# 1. 准备输入
+tokens, x_np = prepare_inputs()
+
+# 2. 初始化权重 (U 和 W)
+# 手动生成这些权重矩阵，以便同时传给 Numpy 和 PyTorch 保证起点一致
+np.random.seed(100) # 固定随机种子
+U_np = np.random.randn(E, H).astype(np.float32) # 输入 -> 隐藏层权重 (128, 3)
+W_np = np.random.randn(H, H).astype(np.float32) # 隐藏层 -> 隐藏层权重 (3, 3)
+
+# 3. 运行 NumPy 版本
+out_manual_np, h_last_manual = manual_rnn_numpy(x_np, U_np, W_np)
+
+# 4. 准备 PyTorch 数据 (转为 Tensor)
+x_torch = torch.from_numpy(x_np)
+U_torch = torch.from_numpy(U_np)
+W_torch = torch.from_numpy(W_np)
+
+# 5. 运行 PyTorch 版本
+out_torch, h_last_torch = pytorch_rnn_forward(x_torch, U_torch, W_torch)
+
+# 6. 比较结果
+# 将 NumPy 结果转回 PyTorch 张量以便比较
 out_manual = torch.from_numpy(out_manual_np)
 
-# 使用 allclose 进行浮点数精度下的严格比较
-print("逐步输出一致:", torch.allclose(out_manual, out_torch, atol=1e-6))
-# 输出: True
+print(f"NumPy 输出维度: {out_manual.shape} 输出值：{out_manual}")
+print(f"PyTorch 输出维度: {out_torch.shape} 输出值：{out_torch}")
+
+# 使用 allclose 进行比较
+is_match = torch.allclose(out_manual, out_torch, atol=1e-6)
+print("-" * 30)
+print("逐步输出一致:", is_match)
+print("-" * 30)
+
+# 如果不一致，打印最大误差
+if not is_match:
+    diff = (out_manual - out_torch).abs().max()
+    print(f"最大误差: {diff.item()}")
+else:
+    print("匹配！手动实现的 RNN 逻辑与 PyTorch 官方实现完全吻合。")
