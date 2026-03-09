@@ -9,3 +9,6 @@
 
 ##### 注意力机制与Transformer思维导图
 ![Transfomer](./注意力机制与Transformer.png)
+
+##### 预训练模型思维导图
+![预训练模型](./预训练模型.png)
