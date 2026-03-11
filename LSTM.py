@@ -33,7 +33,7 @@ def manual_lstm_numpy(x_np, weights):
     steps = []
     # 按时间步循环
     for t in range(T_local):
-        x_t = x_np[:, t, :]
+        x_t = x_np[:, t, :]  # x_t为行向量
         # 1. 遗忘门
         f_t = sigmoid(x_t @ U_f + h_prev @ W_f)  # 遗忘门使用sigmoid激活函数
 
