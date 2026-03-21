@@ -4,8 +4,8 @@ from transformer import Transformer
 def main():
     # 超参数
     src_vocab_size = 100
-    tgt_vocab_size = 100
-    dim = 512
+    tgt_vocab_size = 100    # 词表大小，假设源语言和目标语言的词表大小相同
+    dim = 512               # 模型维度 (hidden size)
     n_heads = 8
     n_layers = 6
     hidden_dim = 2048
@@ -44,7 +44,7 @@ def main():
     print(f"Target Shape: {tgt.shape}")
     
     print("\nModel Output:")
-    print(f"Output Shape: {output.shape}") # 预期 [batch_size, tgt_len, tgt_vocab_size]
+    print(f"Output Shape: {output.shape}") # 预期 [batch_size, tgt_len, tgt_vocab_size]， 输出每个位置的词概率分布
 
 if __name__ == "__main__":
     main()
