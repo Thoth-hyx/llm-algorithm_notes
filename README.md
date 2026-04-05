@@ -22,7 +22,11 @@
 
 ### Llama模型
 Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段找一个最本质的数学区别，那就是：有没有那个**因果掩码（Causal Mask）**
+#### Llama2架构
+![Llama2架构](./LLama2架构.png)
 输入在进入注意力层和前馈网络之前，会经过一次**RMS Norm**进行预归一化，
+#### Llama2注意力架构
+![Llama2注意力结构](./llama2attention.png)
 
 ---
 
@@ -257,6 +261,9 @@ Self-Attention 本质上是**置换不变的（Permutation Invariant）**。如�
 *   **原始（没转前）的点积**：$q_1 k_1 + q_2 k_2$
 *   **RoPE 旋转后的点积**：
     $$\text{Score} = (q_1 k_1 + q_2 k_2) \cos((m-n)\theta) + (q_1 k_2 - q_2 k_1) \sin((m-n)\theta)$$
+
+---
+
 
 
 

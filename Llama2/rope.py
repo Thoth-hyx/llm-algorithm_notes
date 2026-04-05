@@ -1,5 +1,17 @@
 # 位置编码实现，基于旋转位置编码（RoPE）
 import torch
+
+# 对于 GQA（Group Query Attention）机制，需要将 K/V 向量重复以匹配 Q 的头数
+def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
+    batch_size, seq_len, n_kv_heads, head_dim = x.shape  # x 的形状为 (batch_size, seq_len, n_kv_heads, head_dim)
+    if n_rep == 1:  # 如果不需要重复，直接返回原始张量
+        return x
+    return (
+        x[:, :, :, None, :]
+        .expand(batch_size, seq_len, n_kv_heads, n_rep, head_dim)   # 在 n_kv_heads 维度后添加一个新的维度，并在该维度上扩展 n_rep 次
+        .reshape(batch_size, seq_len, n_kv_heads * n_rep, head_dim) # 将扩展后的张量重新形状为 (batch_size, seq_len, n_kv_heads * n_rep, head_dim)，即重复后的 K/V 向量
+    )
+
 # 预先计算频率和相位，供后续使用
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0) -> torch.Tensor:
     # 1. 计算频率：1 / (theta^(2i/dim))，维度为 dim//2，因为每两个维度共享一个频率
