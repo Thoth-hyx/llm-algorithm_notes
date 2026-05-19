@@ -68,9 +68,7 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 
 *   **原理**：对单个样本的所有特征维度（Channel）计算均值和方差，然后进行归一化。
 *   **公式**：
-    $$
-    y = \frac{x - E[x]}{\sqrt{Var[x] + \epsilon}} \cdot \gamma + \beta
-    $$
+    $$y = \frac{x - E[x]}{\sqrt{Var[x] + \epsilon}} \cdot \gamma + \beta$$ 
     *   $E[x]$ 是均值，使得分布中心移到 0。
     *   $Var[x]$ 是方差，使得分布缩放到 1。
     *   $\gamma$ 和 $\beta$ 是可学习的增益和偏置。
@@ -81,9 +79,7 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 
 *   **核心改进**：研究发现 LayerNorm 中的“中心化（减去均值）”作用不大，真正起作用的是“缩放（除以标准差）”。RMSNorm 舍弃了减去均值的步骤，只计算方差（均方根）。
 *   **公式**：    
-$$
-\bar{a}_i = \frac{a_i}{\sqrt{\frac{1}{n}\sum_{j=1}^n a_j^2 + \epsilon}} \cdot \gamma_i
-$$
+    $$\bar{a}_i = \frac{a_i}{\sqrt{\frac{1}{n}\sum_{j=1}^n a_j^2 + \epsilon}} \cdot \gamma_i$$ 
 *   **优点**：
         1.**计算更高效**：不需要计算均值，减少了约 10%~40% 的归一化计算开销。
         2.**更稳定**：在超大规模模型中表现出比标准 LN 更好的鲁棒性。
@@ -92,9 +88,8 @@ $$
 这是由微软提出的一种较新的方案，旨在解决超深网络（如 1000 层）的稳定性问题。
 
 *   **特点**：它不仅是一种归一化公式，更是一套**归一化与残差连接结合**的初始化策略,类似于Post-LN。
-*   **公式形式**：$$
-x = \text{Norm}(\alpha \cdot x + \text{Network}(x))
-$$。
+*   **公式形式**：
+    $$x = \text{Norm}(\alpha \cdot x + \text{Network}(x))$$ 
 *   **优势**：在增加模型深度时，它能保证梯度在反向传播时不会爆炸，使模型能够堆叠更多的层数而性能不退化（曾用于 GLM-130B 的早期版本）。
 
 #### 4. 关键位置策略：Pre-LN vs. Post-LN
@@ -167,14 +162,14 @@ $$x_n = x_0 + f_1(\text{Norm}(x_0)) + f_2(\text{Norm}(x_1)) + f_3(\text{Norm}(x_
 GLU 不再是一条路走到黑，而是分成了并行的**两条路**：
 1.  **支路一（值支路）**：线性变换。
 2.  **支路二（门控支路）**：线性变换 + 激活函数。激活函数是**Swish函数**：
-$$
-\text{Swish}(x) = x \cdot \sigma(\beta x) = \frac{x}{1 + e^{-\beta x}}
-$$
+    $$
+    \text{Swish}(x) = x \cdot \sigma(\beta x) = \frac{x}{1 + e^{-\beta x}}
+    $$
 其中 $\sigma(x)$ 是 Sigmoid 函数， $\beta$ 是一个可学习的参数或常数。
 当 $\beta = 1$ 时，Swish 就变成了 **SiLU**：
-$$
-\text{SiLU}(x) = x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}
-$$
+    $$
+    \text{SiLU}(x) = x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}
+    $$
 1.  **合并**：两条路的结果**逐元素相乘**。
 ##### B. SwiGLU 结构详解
 SwiGLU 是 GLU 的一种特例，使用 **Swish (SiLU)** 激活函数。这是 **Llama 2/3、Mistral、Gemma** 的共同选择。
@@ -242,7 +237,7 @@ Self-Attention 本质上是**置换不变的（Permutation Invariant）**。如�
 模型其实并不关心某个词是在第 5 还是第 50 个，而更关心的是：**词 A 和词 B 之间离了多远**。
 
 *   **代表**：T5、Transformer-XL。
-*   **做法**：不再在词向量上加东西，而是在计算 Attention 分数（$QK^T$）时，根据 $i$ 和 $j$ 的距离 $(i-j)$ 额外加一个偏置项（Bias）。
+*   **做法**：不再在词向量上加东西，而是在计算 Attention 分数 （ $QK^T$ ） 时，根据 $i$ 和 $j$ 的距离 $(i-j)$ 额外加一个偏置项（Bias）。
 *   **优点**：外推性好，模型能处理比训练时更长的序列。
 *   **缺点**：计算复杂度高，推理时难以缓存（KV Cache 优化困难）。
 
@@ -265,7 +260,7 @@ Self-Attention 本质上是**置换不变的（Permutation Invariant）**。如�
 
 *   **结构逻辑**：
     它非常粗暴——直接在 Attention Matrix 上减去一个正比于距离的惩罚值。
-*   **公式**：$\text{Score} = QK^T - \lambda \cdot |i - j|$
+*   **公式**： $\text{Score} = QK^T - \lambda \cdot |i - j|$
 *   **特点**：**零样本外推**。训练 1k 长度的模型，可以直接在 10k 长度上推理而不崩溃。它完全抛弃了“位置向量”的概念，只保留距离惩罚。
 
 #### 5. 总结对照表
