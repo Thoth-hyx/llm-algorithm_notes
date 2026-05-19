@@ -68,7 +68,9 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 
 *   **原理**：对单个样本的所有特征维度（Channel）计算均值和方差，然后进行归一化。
 *   **公式**：
-    $$y = \frac{x - E[x]}{\sqrt{Var[x] + \epsilon}} \cdot \gamma + \beta$$ 
+```math
+y = \frac{x - E[x]}{\sqrt{Var[x] + \epsilon}} \cdot \gamma + \beta
+```
     *   $E[x]$ 是均值，使得分布中心移到 0。
     *   $Var[x]$ 是方差，使得分布缩放到 1。
     *   $\gamma$ 和 $\beta$ 是可学习的增益和偏置。
@@ -79,7 +81,9 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 
 *   **核心改进**：研究发现 LayerNorm 中的“中心化（减去均值）”作用不大，真正起作用的是“缩放（除以标准差）”。RMSNorm 舍弃了减去均值的步骤，只计算方差（均方根）。
 *   **公式**：    
-    $$\bar{a}_i = \frac{a_i}{\sqrt{\frac{1}{n}\sum_{j=1}^n a_j^2 + \epsilon}} \cdot \gamma_i$$ 
+```math
+\bar{a}_i = \frac{a_i}{\sqrt{\frac{1}{n}\sum_{j=1}^n a_j^2 + \epsilon}} \cdot \gamma_i
+```
 *   **优点**：
         1.**计算更高效**：不需要计算均值，减少了约 10%~40% 的归一化计算开销。
         2.**更稳定**：在超大规模模型中表现出比标准 LN 更好的鲁棒性。
@@ -89,7 +93,9 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 
 *   **特点**：它不仅是一种归一化公式，更是一套**归一化与残差连接结合**的初始化策略,类似于Post-LN。
 *   **公式形式**：
-    $$x = \text{Norm}(\alpha \cdot x + \text{Network}(x))$$ 
+```math
+x = \text{Norm}(\alpha \cdot x + \text{Network}(x))
+```
 *   **优势**：在增加模型深度时，它能保证梯度在反向传播时不会爆炸，使模型能够堆叠更多的层数而性能不退化（曾用于 GLM-130B 的早期版本）。
 
 #### 4. 关键位置策略：Pre-LN vs. Post-LN
@@ -120,15 +126,23 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 假设输入是 $x_0$，每一层的子层操作（比如 Attention 或 MLP）记为 $f_i$：
 
 *   **第一层输出：**
-    $$x_1 = x_0 + f_1(\text{Norm}(x_0))$$
+```math
+x_1 = x_0 + f_1(\text{Norm}(x_0))
+```
 *   **第二层输出：**
-    $$x_2 = x_1 + f_2(\text{Norm}(x_1))$$
+```math
+x_2 = x_1 + f_2(\text{Norm}(x_1))
+```
 *   **第三层输出：**
-    $$x_3 = x_2 + f_3(\text{Norm}(x_2))$$
+```math
+x_3 = x_2 + f_3(\text{Norm}(x_2))
+```
 
 如果我们把 $x_1$ 代入到 $x_2$ 的公式里，把 $x_2$ 代入到 $x_3$ 里，就会得到：
 
-$$x_n = x_0 + f_1(\text{Norm}(x_0)) + f_2(\text{Norm}(x_1)) + f_3(\text{Norm}(x_2)) + \dots$$
+```math
+x_n = x_0 + f_1(\text{Norm}(x_0)) + f_2(\text{Norm}(x_1)) + f_3(\text{Norm}(x_2)) + \dots
+```
 
 **这个公式揭示了 Pre-LN 架构的三个核心真相：**
 
@@ -162,14 +176,14 @@ $$x_n = x_0 + f_1(\text{Norm}(x_0)) + f_2(\text{Norm}(x_1)) + f_3(\text{Norm}(x_
 GLU 不再是一条路走到黑，而是分成了并行的**两条路**：
 1.  **支路一（值支路）**：线性变换。
 2.  **支路二（门控支路）**：线性变换 + 激活函数。激活函数是**Swish函数**：
-    $$
-    \text{Swish}(x) = x \cdot \sigma(\beta x) = \frac{x}{1 + e^{-\beta x}}
-    $$
+```math
+\text{Swish}(x) = x \cdot \sigma(\beta x) = \frac{x}{1 + e^{-\beta x}}
+```
 其中 $\sigma(x)$ 是 Sigmoid 函数， $\beta$ 是一个可学习的参数或常数。
 当 $\beta = 1$ 时，Swish 就变成了 **SiLU**：
-    $$
-    \text{SiLU}(x) = x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}
-    $$
+```math
+\text{SiLU}(x) = x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}
+```
 1.  **合并**：两条路的结果**逐元素相乘**。
 ##### B. SwiGLU 结构详解
 SwiGLU 是 GLU 的一种特例，使用 **Swish (SiLU)** 激活函数。这是 **Llama 2/3、Mistral、Gemma** 的共同选择。
@@ -294,7 +308,9 @@ Self-Attention 本质上是**置换不变的（Permutation Invariant）**。如�
 ##### 如果只看其中一个 2 维子空间：
 *   **原始（没转前）的点积**： $q_1 k_1 + q_2 k_2$
 *   **RoPE 旋转后的点积**：
-    $$\text{Score} = (q_1 k_1 + q_2 k_2) \cos((m-n)\theta) + (q_1 k_2 - q_2 k_1) \sin((m-n)\theta)$$
+```math
+\text{Score} = (q_1 k_1 + q_2 k_2) \cos((m-n)\theta) + (q_1 k_2 - q_2 k_1) \sin((m-n)\theta)
+```
 
 ---
 
@@ -400,19 +416,25 @@ Self-Attention 本质上是**置换不变的（Permutation Invariant）**。如�
 假设当前计算出的真实梯度（坡度）为 $g_t$。
 
 ##### 1. 一阶矩估计 $m_t$（动量：解决方向震荡）
-$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$$
+```math
+m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t
+```
 *   **物理意义**：它不仅看当前的坡度 $g_t$，还保留了之前下山的“惯性” $m_{t-1}$（$\beta_1$ 通常取 0.9）。
 *   **作用**：如果当前梯度突然指向一个诡异的悬崖，过去的惯性能把它拉回来，保证大方向的平滑。
 
 ##### 2. 二阶矩估计 $v_t$（自适应学习率：解决步长失控）
-$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2$$
+```math
+v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2
+```
 *   **物理意义**：它计算的是梯度的“剧烈程度（方差）”。如果某个参数频繁剧烈变动，$v_t$ 就会非常大（$\beta_2$ 通常取 0.95 或 0.999）。
 *   **作用**：在更新时，步长会**除以 $\sqrt{v_t}$**。这意味着：**越是剧烈波动的参数，我越要压制它的更新幅度；越是一直死水微澜的参数，我越要放大它的更新幅度。**
 
 ##### 3. 为什么一定要加上“W” (Weight Decay 解耦)
 *   **传统的 Adam（错误做法）**：把 L2 正则化（惩罚过大的参数）直接加到梯度 $g_t$ 里。结果这个惩罚项在除以 $\sqrt{v_t}$ 时被稀释了，导致模型容易过拟合。
 *   **AdamW（正确做法）**：参数更新完之后，**强行按比例直接缩小参数本身**：
-    $$\theta_{t} = \text{Adam更新后的参数} - \eta \lambda \theta_{t-1}$$
+```math
+\theta_{t} = \text{Adam更新后的参数} - \eta \lambda \theta_{t-1}
+```
     （$\eta$ 是学习率，$\lambda$ 是衰减系数）。这一刀切得极其干净利落，是大模型泛化能力极强的根基。
 
 #### 第二部分：优化器的灵魂伴侣 —— 学习率调度器 (LR Scheduler)
