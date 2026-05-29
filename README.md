@@ -28,8 +28,8 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 #### 🌟 Llama 2 标准计算流程图
 
 **【输入准备阶段】**
-1. 文本 $\rightarrow$ **Tokenizer** $\rightarrow$ Token IDs (整数序列)
-2. Token IDs $\rightarrow$ **Embedding 层** $\rightarrow$ 初始词向量 $X$
+1. 文本 $\rightarrow$ **Tokenizer（BPE）** $\rightarrow$ Token IDs (整数序列)
+2. Token IDs $\rightarrow$ **Embedding 层(可学习参数)** $\rightarrow$ 初始词向量 $X$
 
 **【Decoder Block 循环阶段】** *(假设重复 32 层)*
 3. $X$ 备份一份用于稍后的残差连接。
@@ -55,6 +55,10 @@ Encoder（如 BERT） 和 Decoder-only（如 GPT） 在“理解prompt”阶段�
 ![Llama2注意力结构](./llama2attention.png)
 
 输入在进入注意力层和前馈网络之前，会经过一次**RMS Norm**进行预归一化
+然后将归一化后的数据映射为 $Q, K, V$ 向量。下面的线性投影矩阵是基于GQA
+![QKV矩阵映射](QKV矩阵映射.png)
+因果掩码计算过程
+![因果掩码](因果掩码.png)
 
 ---
 
